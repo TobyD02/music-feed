@@ -10,29 +10,19 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../utils/supabase";
 import { Stack } from "expo-router";
 import SoundPlayer from "react-native-sound-player";
-
-interface Post {
-  post_id: number;
-  date_posted: string;
-  user_id: number;
-  user_email: string;
-  post_data: {
-    song_name: string;
-    album_cover: string;
-    song_artist: string;
-    preview_url: string;
-  };
-}
+import { Post, UserData } from "../../utils/interfaces";
+import { getPosts, getUserData } from "../../utils/api_interface";
 
 const ViewPosts = () => {
-  const [posts, setPosts] = useState<[] | null>(null);
+  const [posts, setPosts] = useState<Post[] | null>(null);
   const [playing, setPlaying] = useState({
     isPlaying: false,
     name: "",
   });
+  const [user, setUser] = useState<UserData | null>(null);
 
   const playTrack = (track: string) => {
-    console.log(track)
+    console.log(track);
     if (playing.isPlaying && track == playing.name) {
       setPlaying({
         isPlaying: false,
@@ -69,16 +59,16 @@ const ViewPosts = () => {
     .subscribe();
 
   useEffect(() => {
-    supabase
-      .from("daily_posts")
-      .select("*")
-      .eq("date_posted", new Date().toISOString().slice(0, 10))
-      .then(({ data, error }) => {
-        if (data) {
-          // console.log(data);
-          setPosts(data);
-        } else if (error) console.log(error);
-      });
+    getUserData().then(({ user, error }) => {
+      if (error) console.log(error);
+      else {
+        setUser(user);
+        getPosts(user).then(({ data, error }) => {
+          if (error) console.log(error);
+          else setPosts(data);
+        });
+      }
+    });
   }, []);
 
   return (
@@ -87,14 +77,14 @@ const ViewPosts = () => {
       <ScrollView contentContainerStyle={styles.posts_container}>
         {posts &&
           posts?.map((post: Post) => (
-            <Post key={post.post_id} post={post} playTrack={playTrack} />
+            <PostItem key={post.post_id} post={post} playTrack={playTrack} />
           ))}
       </ScrollView>
     </View>
   );
 };
 
-const Post = ({
+const PostItem = ({
   post,
   playTrack,
 }: {
@@ -103,20 +93,28 @@ const Post = ({
 }) => {
   return (
     <View style={styles.post}>
+      {post.picture_url && (
+        <Image
+          source={{ uri: post.picture_url }}
+          style={{ height: 50, width: 50 }}
+        />
+      )}
       <Text style={styles.post_artist}>Posted: {post.date_posted}</Text>
-      <Text style={styles.post_artist}>Posted: {post.user_email}</Text>
+      <Text style={styles.post_artist}>Posted: {post.display_name}</Text>
       <Image
         source={{ uri: post.post_data.album_cover }}
         style={{ height: 200, width: 200 }}
       />
       <Text style={styles.post_title}>{post.post_data.song_name}</Text>
       <Text style={styles.post_artist}>{post.post_data.song_artist}</Text>
-      {post.post_data.preview_url ? 
+      {post.post_data.preview_url ? (
         <Button
           title="play"
           onPress={() => playTrack(post.post_data.preview_url)}
-        /> : <Text style={styles.post_artist}>No Preview</Text>
-      }
+        />
+      ) : (
+        <Text style={styles.post_artist}>No Preview</Text>
+      )}
     </View>
   );
 };

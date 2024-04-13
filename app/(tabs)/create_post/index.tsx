@@ -10,8 +10,9 @@ import {
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../utils/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { User } from "@supabase/supabase-js";
 import { useRouter } from "expo-router";
+import { createPost, getUserData, getUserHasPosted } from "../../utils/api_interface";
+import { UserData } from "../../utils/interfaces";
 
 type setSelectedType = (
   value:
@@ -24,15 +25,6 @@ type setSelectedType = (
     | string
 ) => void;
 
-interface user {
-  created_at: string;
-  display_name: string;
-  email: string;
-  followers: string[];
-  following: string[];
-  id: string;
-}
-
 const CreatePost = () => {
   const [searchResults, setSearchResults] = useState<any | null>(null);
   const [search, setSearch] = useState<string | null>(null);
@@ -43,7 +35,7 @@ const CreatePost = () => {
     song_artist: string;
   } | null>(null);
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [hasPosted, setHasPosted] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -51,30 +43,18 @@ const CreatePost = () => {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: User, error } = await supabase.auth.getUser();
 
-      if (User != null) {
-        supabase
-          .from("users")
-          .select("*")
-          .eq("id", User.user?.id)
-          .single()
-          .then((user_data) => {
-            if (user_data.data) setUser(user_data.data);
-            supabase
-              .from("daily_posts")
-              .select("*")
-              .eq("user_id", User.user?.id)
-              .eq("date_posted", new Date().toISOString().slice(0, 10))
-              .single()
-              .then(({ data, error }) => {
-                // console.log(data, error)
-                if (data) setHasPosted(false);
-                else console.log("not posted today");
-                setLoading(false);
-              });
-          });
-      } else if (error) console.log(error);
+      const {user, error} = await getUserData();
+      if (error) console.log(error)
+      
+      else {
+        console.log('user: ' + JSON.stringify(user))
+        setUser(user);
+        const has_posted = await getUserHasPosted(user.id)
+        setHasPosted(has_posted)
+        setLoading(false)
+      }
+
     };
 
     getUser();
@@ -82,8 +62,6 @@ const CreatePost = () => {
 
   const getSearchData = async () => {
     const token = await AsyncStorage.getItem("provider_token");
-
-    // console.log({ token });
 
     fetch(
       "https://api.spotify.com/v1/search?q=" + search + "&type=track&limit=5",
@@ -104,22 +82,12 @@ const CreatePost = () => {
     if (!selected) return null;
     if (hasPosted) return null;
 
-    console.log(user);
-
-    supabase
-      .from("daily_posts")
-      .insert({
-        user_id: user?.id,
-        user_name: user?.display_name,
-        picture_url: user?.picture_url,
-        post_data: selected,
+    if (user)
+      createPost(user, selected).then((res) => {
+        setHasPosted(true)
+      }).catch((e) =>{
+        console.log(e)
       })
-      .then((res) => {
-        if (res.status == 201) {
-          setHasPosted(true);
-          // router.replace("/(tabs)/view_posts/");
-        } else console.log("error");
-      });
   };
 
   if (loading) return <View />;

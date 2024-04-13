@@ -1,5 +1,6 @@
 {
   "expo": {
+    "scheme": "com.tobyd",
     "name": "music-feed",
     "slug": "music-feed",
     "version": "1.0.0",
@@ -15,7 +16,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tobyd.musicfeed"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +26,10 @@
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }

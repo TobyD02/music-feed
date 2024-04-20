@@ -71,18 +71,25 @@ const PostItem = ({ post, playTrack, playing }: { post: Post; playTrack: (track:
         </Text>
       </Card.Content>
       <Card.Content style={{ width: "100%", display: "flex", alignItems: "center", padding: 10 }}>
-        <View style={{width: '100%', padding:0}}>
+        <View style={{ width: "100%", padding: 0 }}>
           <Card.Cover source={{ uri: post.post_data.album_cover }} style={{ height: 300, width: "100%" }} />
-          <View style={{ ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end'}}>
-            {playing.isPlaying && playing.name == post.post_data.preview_url ? (
-              <IconButton icon="pause-circle" size={35} onPress={() => playTrack(post.post_data.preview_url)} />
-            ) : (
-              <IconButton icon="play-circle" size={35} onPress={() => playTrack(post.post_data.preview_url)} />
-            )}
-          </View>
+
+          {post.post_data.preview_url ? (
+            <View style={{ ...StyleSheet.absoluteFillObject, justifyContent: "flex-end" }}>
+              {playing.isPlaying && playing.name == post.post_data.preview_url ? (
+                <IconButton icon="pause-circle" size={35} onPress={() => playTrack(post.post_data.preview_url)} />
+              ) : (
+                <IconButton icon="play-circle" size={35} onPress={() => playTrack(post.post_data.preview_url)} />
+              )}
+            </View>
+          ) : (
+            <View style={{ ...StyleSheet.absoluteFillObject, justifyContent: "flex-end" }}>
+              <IconButton icon="close" size={35} />
+            </View>
+          )}
         </View>
         <Card.Content style={{ paddingTop: 5 }}>
-          <Text variant="titleMedium" style={{ color: "white" }}>
+          <Text variant="titleMedium" numberOfLines={1}style={{ color: "white"}}>
             {post.post_data.song_name}
           </Text>
           <Text variant="bodyMedium">{post.post_data.song_artist}</Text>

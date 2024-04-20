@@ -1,19 +1,9 @@
-import {
-  View,
-  Text,
-  Button,
-  Image,
-  TextInput,
-  StyleSheet,
-  Pressable,
-} from "react-native";
+import { View, Image, StyleSheet, Pressable } from "react-native";
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../utils/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import { createPost, getUserData, getUserHasPosted } from "../../utils/api_interface";
 import { UserData } from "../../utils/interfaces";
-import { useTheme } from "react-native-paper";
+import { useTheme, Text, Searchbar, Button } from "react-native-paper";
 
 type setSelectedType = (
   value:
@@ -28,7 +18,8 @@ type setSelectedType = (
 
 const CreatePost = () => {
   const [searchResults, setSearchResults] = useState<any | null>(null);
-  const [search, setSearch] = useState<string | null>(null);
+  const [search, setSearch] = useState<string|null>(null);
+  const [query, setQuery] = useState<string>('')
   const [selected, setSelected] = useState<{
     song_name: string;
     preview_url: string;
@@ -40,22 +31,20 @@ const CreatePost = () => {
   const [hasPosted, setHasPosted] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const theme = useTheme()
+  const theme = useTheme();
 
   useEffect(() => {
     const getUser = async () => {
-
-      const {user, error} = await getUserData();
-      if (error) console.log(error)
-      
+      const { user, error } = await getUserData();
+      if (error) console.log(error);
       else {
-        console.log('user: ' + JSON.stringify(user))
+        console.log("user: " + JSON.stringify(user));
         setUser(user);
-        const has_posted = await getUserHasPosted(user.id)
-        setHasPosted(has_posted)
-        setLoading(false)
+        const has_posted = await getUserHasPosted(user.id);
+        // setHasPosted(has_posted);
+        setHasPosted(false);
+        setLoading(false);
       }
-
     };
 
     getUser();
@@ -64,14 +53,11 @@ const CreatePost = () => {
   const getSearchData = async () => {
     const token = await AsyncStorage.getItem("provider_token");
 
-    fetch(
-      "https://api.spotify.com/v1/search?q=" + search + "&type=track&limit=5",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    fetch("https://api.spotify.com/v1/search?q=" + search + "&type=track&limit=5", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((response) => response.json())
       .then((data) => {
         setSearchResults(data);
@@ -84,53 +70,46 @@ const CreatePost = () => {
     if (hasPosted) return null;
 
     if (user)
-      createPost(user, selected).then((res) => {
-        setHasPosted(true)
-      }).catch((e) =>{
-        console.log(e)
-      })
+      createPost(user, selected)
+        .then((res) => {
+          setHasPosted(true);
+        })
+        .catch((e) => {
+          console.log(e);
+        });
   };
 
   if (loading) return <View />;
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {hasPosted ? (
-        <Text>Already posted today</Text>
+        <Text variant="titleLarge">Already posted today</Text>
       ) : (
         <>
-          <Text>Selected Song</Text>
-          {selected && (
-            <SearchItem
-              preview_url={selected?.preview_url}
-              song_artist={selected?.song_artist}
-              song_name={selected?.song_name}
-              album_cover={selected?.album_cover}
-              setItem={setSelected as setSelectedType}
-            />
-          )}
-          <Text>Choose a song</Text>
-          <TextInput
+          <Text variant="titleLarge">Selected Song</Text>
+          {selected && <SearchItem preview_url={selected?.preview_url} song_artist={selected?.song_artist} song_name={selected?.song_name} album_cover={selected?.album_cover} setItem={setSelected as setSelectedType} />}
+          <Text variant="titleMedium">Choose a song</Text>
+          <Searchbar
             placeholder="Search"
+            style={{ width: '75%', height: 45 }}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="off"
+            inputStyle={{minHeight: 0}}
+            value={query}
             onChangeText={(text) => {
+              setQuery(text)
               setSearch(encodeURIComponent(text));
               // console.log(search);
               getSearchData();
-            }}
-          ></TextInput>
+            }}></Searchbar>
           <View style={styles.search_results}>
             {searchResults &&
               searchResults.tracks?.items?.map((item: any) => (
-                <SearchItem
-                  key={item.id}
-                  song_name={item.name}
-                  album_cover={item.album.images[0].url}
-                  song_artist={item.artists[0].name}
-                  preview_url={item.preview_url}
-                  setItem={setSelected as setSelectedType}
-                />
+                <SearchItem key={item.id} song_name={item.name} album_cover={item.album.images[0].url} song_artist={item.artists[0].name} preview_url={item.preview_url} setItem={setSelected as setSelectedType} />
               ))}
           </View>
-          <Button title="submit" onPress={() => submitPost()} />
+          <Button mode="elevated" onPress={() => submitPost()}>Post</Button>
         </>
       )}
     </View>
@@ -160,12 +139,7 @@ const SearchItem = ({
   ) => void;
 }) => {
   return (
-    <Pressable
-      style={styles.search_item}
-      onPress={() =>
-        setItem({ song_name, album_cover, song_artist, preview_url })
-      }
-    >
+    <Pressable style={styles.search_item} onPress={() => setItem({ song_name, album_cover, song_artist, preview_url })}>
       <Image source={{ uri: album_cover }} style={{ height: 50, width: 50 }} />
       <Text> {song_name}</Text>
     </Pressable>
@@ -175,7 +149,6 @@ const SearchItem = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#333",
     alignItems: "center",
     justifyContent: "center",
   },

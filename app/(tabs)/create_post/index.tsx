@@ -13,6 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { createPost, getUserData, getUserHasPosted } from "../../utils/api_interface";
 import { UserData } from "../../utils/interfaces";
+import { useTheme } from "react-native-paper";
 
 type setSelectedType = (
   value:
@@ -39,7 +40,7 @@ const CreatePost = () => {
   const [hasPosted, setHasPosted] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const router = useRouter();
+  const theme = useTheme()
 
   useEffect(() => {
     const getUser = async () => {
@@ -174,7 +175,7 @@ const SearchItem = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#333",
     alignItems: "center",
     justifyContent: "center",
   },

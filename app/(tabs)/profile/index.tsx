@@ -9,14 +9,16 @@ import {
 } from "react-native";
 import { supabase } from "../../utils/supabase";
 import { useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
+import { getUserData } from "../../utils/api_interface";
+import { UserData } from "../../utils/interfaces";
 
 export default function Profile() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   useEffect(() => {
+
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
-        setUser(user);
+        getUserData().then(({ user }) => setUser(user));
       } else {
         Alert.alert("Error Accessing User");
       }
@@ -34,7 +36,9 @@ export default function Profile() {
     <SafeAreaView style={{ flex: 1 }}>
       <Stack.Screen options={{ headerShown: true, title: "Profile" }} />
       <View style={{ padding: 16 }}>
-        <Text>{user?.user_metadata.name}</Text>
+        <Text>{user?.display_name}</Text>
+        <Text>Followers: {user?.followers?.length}</Text>
+        <Text>Following: {user?.following?.length}</Text>
         <TouchableOpacity onPress={doLogout} style={styles.buttonContainer}>
           <Text style={styles.buttonText}>LOGOUT</Text>
         </TouchableOpacity>

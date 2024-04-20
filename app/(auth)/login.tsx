@@ -1,4 +1,5 @@
-import { Button, AppState, View } from "react-native";
+import { Text, AppState, View, StyleSheet } from "react-native";
+import {Button} from 'react-native-paper'
 import { makeRedirectUri } from "expo-auth-session";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as WebBrowser from "expo-web-browser";
@@ -6,6 +7,7 @@ import * as Linking from "expo-linking";
 import { supabase } from "../utils/supabase";
 import { Stack } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTheme } from "react-native-paper";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -87,10 +89,20 @@ export default function Auth() {
   console.log({ url });
   if (url) createSessionFromUrl(url);
 
+  const theme = useTheme()
+
   return (
-    <View>
-      <Stack.Screen options={{ headerShown: true, title: "Login" }} />
-      <Button onPress={performOAuth} title="Sign in with Spotify" />
+    <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <Stack.Screen options={{ headerShown: false, title: "Login" }} />
+      <Button style={{width: '75%'}}mode="contained" buttonColor="green" textColor='white' onPress={performOAuth} >Sign in with Spotify</Button>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  }
+})

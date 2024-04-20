@@ -1,17 +1,13 @@
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  ScrollView,
-  Button,
-} from "react-native";
+import { View, Image, StyleSheet, ScrollView } from "react-native";
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../utils/supabase";
 import { Stack } from "expo-router";
 import SoundPlayer from "react-native-sound-player";
 import { Post, UserData } from "../../utils/interfaces";
-import { getPosts, getUserData } from "../../utils/api_interface";
+import { getPosts, getUserData, getUserHasPosted } from "../../utils/api_interface";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { IconButton, useTheme } from "react-native-paper";
+import { Card, Text, Avatar, Button } from "react-native-paper";
 
 const ViewPosts = () => {
   const [posts, setPosts] = useState<Post[] | null>(null);
@@ -38,26 +34,6 @@ const ViewPosts = () => {
     }
   };
 
-  supabase
-    .channel("schema-db-changes")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "daily_posts" },
-      (payload) => {
-        supabase
-          .from("daily_posts")
-          .select("*")
-          .eq("date_posted", new Date().toISOString().slice(0, 10))
-          .then(({ data, error }) => {
-            if (data) {
-              console.log(data);
-              setPosts(data);
-            } else if (error) console.log(error);
-          });
-      }
-    )
-    .subscribe();
-
   useEffect(() => {
     getUserData().then(({ user, error }) => {
       if (error) console.log(error);
@@ -65,76 +41,68 @@ const ViewPosts = () => {
         setUser(user);
         getPosts(user).then(({ data, error }) => {
           if (error) console.log(error);
-          else setPosts(data);
+          else {
+            setPosts(data);
+          }
         });
       }
     });
-  }, []);
+  }, [posts]);
+
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, paddingTop: insets.top }}>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView contentContainerStyle={styles.posts_container}>
-        {posts &&
-          posts?.map((post: Post) => (
-            <PostItem key={post.post_id} post={post} playTrack={playTrack} />
-          ))}
-      </ScrollView>
+      <ScrollView contentContainerStyle={styles.posts_container}>{posts && posts?.map((post: Post) => <PostItem key={post.post_id} post={post} playTrack={playTrack} playing={playing} />)}</ScrollView>
     </View>
   );
 };
 
-const PostItem = ({
-  post,
-  playTrack,
-}: {
-  post: Post;
-  playTrack: (track: string) => void;
-}) => {
+const PostItem = ({ post, playTrack, playing }: { post: Post; playTrack: (track: string) => void; playing: { isPlaying: boolean; name: string } }) => {
+  const theme = useTheme();
+
   return (
-    <View style={styles.post}>
-      {post.picture_url && (
-        <Image
-          source={{ uri: post.picture_url }}
-          style={{ height: 50, width: 50 }}
-        />
-      )}
-      <Text style={styles.post_artist}>Posted: {post.date_posted}</Text>
-      <Text style={styles.post_artist}>Posted: {post.display_name}</Text>
-      <Image
-        source={{ uri: post.post_data.album_cover }}
-        style={{ height: 200, width: 200 }}
-      />
-      <Text style={styles.post_title}>{post.post_data.song_name}</Text>
-      <Text style={styles.post_artist}>{post.post_data.song_artist}</Text>
-      {post.post_data.preview_url ? (
-        <Button
-          title="play"
-          onPress={() => playTrack(post.post_data.preview_url)}
-        />
-      ) : (
-        <Text style={styles.post_artist}>No Preview</Text>
-      )}
-    </View>
+    <Card mode="elevated" style={styles.post}>
+      <Card.Content style={{ flexDirection: "row", alignItems: "center", width: "100%" }}>
+        <Avatar.Image size={25} source={{ uri: post.picture_url }} style={{ marginRight: 10 }} />
+        <Text variant="titleLarge" style={[styles.post_title, { color: theme.colors.primary }]}>
+          {post.display_name}
+        </Text>
+      </Card.Content>
+      <Card.Content style={{ width: "100%", display: "flex", alignItems: "center", padding: 10 }}>
+        <View style={{width: '100%', padding:0}}>
+          <Card.Cover source={{ uri: post.post_data.album_cover }} style={{ height: 300, width: "100%" }} />
+          <View style={{ ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end'}}>
+            {playing.isPlaying && playing.name == post.post_data.preview_url ? (
+              <IconButton icon="pause-circle" size={35} onPress={() => playTrack(post.post_data.preview_url)} />
+            ) : (
+              <IconButton icon="play-circle" size={35} onPress={() => playTrack(post.post_data.preview_url)} />
+            )}
+          </View>
+        </View>
+        <Card.Content style={{ paddingTop: 5 }}>
+          <Text variant="titleMedium" style={{ color: "white" }}>
+            {post.post_data.song_name}
+          </Text>
+          <Text variant="bodyMedium">{post.post_data.song_artist}</Text>
+        </Card.Content>
+      </Card.Content>
+    </Card>
   );
 };
 const styles = StyleSheet.create({
   post: {
     width: 300, // Width of each post
-    height: 400, // Height of each post
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#222",
+    height: 420, // Height of each post
     margin: 10, // Spacing between posts
   },
   posts_container: {
     flexGrow: 1,
     flexDirection: "column",
-    backgroundColor: "#000000",
     alignItems: "center",
   },
   post_title: {
-    color: "white",
     fontFamily: "Helvetica",
     fontWeight: "bold",
     fontSize: 20,

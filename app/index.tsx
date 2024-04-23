@@ -13,7 +13,7 @@ export default function IndexPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        router.replace("/(tabs)/create_post/");
+        router.replace("/(tabs)/view_posts/");
       } else {
         console.log("no user");
       }
@@ -21,7 +21,7 @@ export default function IndexPage() {
 
     supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        router.replace("/(tabs)/create_post/");
+        router.replace("/(tabs)/view_posts/");
       } else {
         console.log("no user");
         router.replace("/(auth)/login");

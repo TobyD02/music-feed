@@ -1,5 +1,5 @@
-import { Text, AppState, View, StyleSheet } from "react-native";
-import {Button} from 'react-native-paper'
+import { AppState, View, StyleSheet } from "react-native";
+import { Button, Text } from "react-native-paper";
 import { makeRedirectUri } from "expo-auth-session";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as WebBrowser from "expo-web-browser";
@@ -8,6 +8,7 @@ import { supabase } from "../utils/supabase";
 import { Stack } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "react-native-paper";
+import { useFonts } from "expo-font";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -21,6 +22,9 @@ WebBrowser.maybeCompleteAuthSession(); // required for web only
 const redirectTo = makeRedirectUri();
 console.log({ redirectTo });
 
+// TODO: When user loads session, load and store data in async storage.
+// TODO: When any page loads, it should check if there is stored data.
+
 const createSessionFromUrl = async (url: string) => {
   const { params, errorCode } = QueryParams.getQueryParams(url);
 
@@ -30,9 +34,9 @@ const createSessionFromUrl = async (url: string) => {
   AsyncStorage.setItem("provider_token", provider_token); // TODO: Async
 
   // Get user info
-  
+
   if (!access_token) return;
-  
+
   const { data, error } = await supabase.auth.setSession({
     access_token,
     refresh_token,
@@ -44,7 +48,7 @@ const createSessionFromUrl = async (url: string) => {
       Authorization: `Bearer ${provider_token}`,
     },
   }).then((res) => res.json());
-  
+
   const user_profile = {
     id: data.session?.user.id,
     display_name: spotify_data?.display_name,
@@ -52,13 +56,13 @@ const createSessionFromUrl = async (url: string) => {
     picture_url: spotify_data?.images.length > 0 ? spotify_data?.images[1].url : "", // Second image is higher resolution
     followers: [],
     following: [],
-  }
+  };
 
   const upload_success = await supabase.from("users").upsert(user_profile);
 
-  console.log(upload_success)
+  console.log(upload_success);
 
-  if (upload_success?.error) return upload_success.error
+  if (upload_success?.error) return upload_success.error;
   return data.session;
 };
 
@@ -72,10 +76,7 @@ const performOAuth = async () => {
   });
   if (error) throw error;
 
-  const res = await WebBrowser.openAuthSessionAsync(
-    data?.url ?? "",
-    redirectTo
-  );
+  const res = await WebBrowser.openAuthSessionAsync(data?.url ?? "", redirectTo);
 
   if (res.type === "success") {
     const { url } = res;
@@ -89,12 +90,18 @@ export default function Auth() {
   console.log({ url });
   if (url) createSessionFromUrl(url);
 
-  const theme = useTheme()
+  const theme = useTheme();
+  const [fontsLoaded] = useFonts({
+    'AvenirLTStd-Black': require('../../assets/fonts/AvenirLTStd-Black.otf'),
+  })
 
   return (
-    <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Stack.Screen options={{ headerShown: false, title: "Login" }} />
-      <Button style={{width: '75%'}}mode="contained" buttonColor="green" textColor='white' onPress={performOAuth} >Sign in with Spotify</Button>
+      <Text variant='titleLarge' style={{margin: 10, color: theme.colors.primary}} >discjam</Text>
+      <Button style={{ width: "40%", borderWidth: 3}} mode="outlined" labelStyle={theme.fonts.titleSmall} textColor="white" onPress={performOAuth}>
+        SIGN IN
+      </Button>
     </View>
   );
 }
@@ -104,5 +111,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-  }
-})
+  },
+});

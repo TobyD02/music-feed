@@ -63,7 +63,7 @@ const UserBar = ({ user, isFollowed, follow }: { user: any; isFollowed: boolean 
       <Card.Content style={{flexDirection: 'row'}}>
         <Card.Content style={{flexDirection: 'row', alignItems: 'center'}}>
           <Avatar.Image source={{ uri: user.picture_url }} size={35} style={{ marginRight: 10 }} />
-          <Text variant="labelLarge">{user.display_name}</Text>
+          <Text variant="titleLarge">{user.display_name}</Text>
         </Card.Content>
         <Card.Content>
           {followed ? (

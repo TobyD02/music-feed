@@ -18,8 +18,8 @@ type setSelectedType = (
 
 const CreatePost = () => {
   const [searchResults, setSearchResults] = useState<any | null>(null);
-  const [search, setSearch] = useState<string|null>(null);
-  const [query, setQuery] = useState<string>('')
+  const [search, setSearch] = useState<string | null>(null);
+  const [query, setQuery] = useState<string>("");
   const [selected, setSelected] = useState<{
     song_name: string;
     preview_url: string;
@@ -41,6 +41,7 @@ const CreatePost = () => {
         console.log("user: " + JSON.stringify(user));
         setUser(user);
         const has_posted = await getUserHasPosted(user.id);
+        //TODO: disable continous posting
         // setHasPosted(has_posted);
         setHasPosted(false);
         setLoading(false);
@@ -83,22 +84,23 @@ const CreatePost = () => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {hasPosted ? (
-        <Text variant="titleLarge">Already posted today</Text>
+        <Text variant="labelMedium">Already posted today</Text>
       ) : (
         <>
-          <Text variant="titleLarge">Selected Song</Text>
-          {selected && <SearchItem preview_url={selected?.preview_url} song_artist={selected?.song_artist} song_name={selected?.song_name} album_cover={selected?.album_cover} setItem={setSelected as setSelectedType} />}
-          <Text variant="titleMedium">Choose a song</Text>
+          <Text variant="labelMedium" style={{margin: 10}}>
+            Whats your song for today?
+          </Text>
           <Searchbar
-            placeholder="Search"
-            style={{ width: '75%', height: 45 }}
+            placeholder=""
+            style={{ width: "75%", height: 30, backgroundColor: "white", margin: 10 }}
             autoCapitalize="none"
             autoCorrect={false}
-            autoComplete="off"
-            inputStyle={{minHeight: 0}}
+            iconColor="white"
+            inputStyle={[{ minHeight: 0, color: "black"}, theme.fonts.bodySmall]}
+            placeholderTextColor={"rgba(0,0,0,0.5)"}
             value={query}
             onChangeText={(text) => {
-              setQuery(text)
+              setQuery(text);
               setSearch(encodeURIComponent(text));
               // console.log(search);
               getSearchData();
@@ -109,7 +111,12 @@ const CreatePost = () => {
                 <SearchItem key={item.id} song_name={item.name} album_cover={item.album.images[0].url} song_artist={item.artists[0].name} preview_url={item.preview_url} setItem={setSelected as setSelectedType} />
               ))}
           </View>
-          <Button mode="elevated" onPress={() => submitPost()}>Post</Button>
+          <Button mode="elevated" labelStyle={theme.fonts.titleSmall} onPress={() => submitPost()}>
+            Post
+          </Button>
+          <View style={styles.song_choice}>
+            {selected && <SearchItem preview_url={selected?.preview_url} song_artist={selected?.song_artist} song_name={selected?.song_name} album_cover={selected?.album_cover} setItem={setSelected as setSelectedType} />}
+          </View>
         </>
       )}
     </View>
@@ -161,7 +168,12 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     height: 250,
+    margin: 10,
   },
+  song_choice: {
+    height: 50,
+    margin: 10
+  }
 });
 
 export default CreatePost;

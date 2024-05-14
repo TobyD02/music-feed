@@ -9,6 +9,7 @@ import { Stack } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "react-native-paper";
 import { useFonts } from "expo-font";
+import { clearUserData, getUserData } from "../utils/api_interface";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -49,20 +50,25 @@ const createSessionFromUrl = async (url: string) => {
     },
   }).then((res) => res.json());
 
-  const user_profile = {
-    id: data.session?.user.id,
-    display_name: spotify_data?.display_name,
-    email: spotify_data?.email,
-    picture_url: spotify_data?.images.length > 0 ? spotify_data?.images[1].url : "", // Second image is higher resolution
-    followers: [],
-    following: [],
-  };
+  // Dont upsert if user already exists
 
-  const upload_success = await supabase.from("users").upsert(user_profile);
+  const { user: userDataRetrieved, error: userDataError } = await getUserData();
 
-  console.log(upload_success);
+  if (!userDataRetrieved || userDataRetrieved == null) {
+    const user_profile = {
+      id: data.session?.user.id,
+      display_name: spotify_data?.display_name,
+      email: spotify_data?.email,
+      picture_url: spotify_data?.images.length > 0 ? spotify_data?.images[1].url : "", // Second image is higher resolution
+      followers: [],
+      following: [],
+      just_created: true,
+    };
 
-  if (upload_success?.error) return upload_success.error;
+    const upload_success = await supabase.from("users").upsert(user_profile);
+    if (upload_success?.error) return upload_success.error;
+  }
+
   return data.session;
 };
 
@@ -92,14 +98,16 @@ export default function Auth() {
 
   const theme = useTheme();
   const [fontsLoaded] = useFonts({
-    'AvenirLTStd-Black': require('../../assets/fonts/AvenirLTStd-Black.otf'),
-  })
+    "AvenirLTStd-Black": require("../../assets/fonts/AvenirLTStd-Black.otf"),
+  });
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Stack.Screen options={{ headerShown: false, title: "Login" }} />
-      <Text variant='titleLarge' style={{margin: 10, color: theme.colors.primary}} >discjam</Text>
-      <Button style={{ width: "40%", borderWidth: 3}} mode="outlined" labelStyle={theme.fonts.titleSmall} textColor="white" onPress={performOAuth}>
+      <Text variant="titleLarge" style={{ margin: 10, color: theme.colors.primary }}>
+        discjam
+      </Text>
+      <Button style={{ width: "40%", borderWidth: 3 }} mode="outlined" labelStyle={theme.fonts.titleSmall} textColor="white" onPress={performOAuth}>
         SIGN IN
       </Button>
     </View>

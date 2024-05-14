@@ -1,6 +1,7 @@
 import { IconButton, Text, useTheme } from "react-native-paper";
 import { Stack, router } from "expo-router";
 import { useState } from "react";
+import { View } from "react-native";
 
 export default function TabsLayout() {
   const theme = useTheme();
@@ -14,7 +15,7 @@ export default function TabsLayout() {
         options={{
           headerShown: true,
           title: "discjam",
-          animationTypeForReplace: lastPage == 'create_post' ? "push" : "pop",
+          animationTypeForReplace: lastPage == "create_post" ? "push" : "pop",
           headerLeft: () => (
             <IconButton
               icon="waveform"
@@ -23,7 +24,7 @@ export default function TabsLayout() {
               iconColor={theme.colors.primary}
               onPress={() => {
                 router.replace("/(tabs)/create_post");
-                setLastPage("view_posts")
+                setLastPage("view_posts");
               }}
             />
           ),
@@ -35,7 +36,7 @@ export default function TabsLayout() {
               iconColor={theme.colors.primary}
               onPress={() => {
                 router.replace("/(tabs)/profile");
-                setLastPage("view_posts")
+                setLastPage("view_posts");
               }}
             />
           ),
@@ -47,7 +48,7 @@ export default function TabsLayout() {
           title: "",
           animationTypeForReplace: "pop",
           headerShown: true,
-          headerTitleStyle:theme.fonts.titleSmall,
+          headerTitleStyle: theme.fonts.titleSmall,
           headerLeft: () => (
             <IconButton
               icon="keyboard-backspace"
@@ -56,7 +57,71 @@ export default function TabsLayout() {
               iconColor={theme.colors.primary}
               onPress={() => {
                 router.navigate("/(tabs)/view_posts");
-                setLastPage("create_post")
+                setLastPage("create_post");
+              }}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="inspect_post"
+        options={{
+          title: "",
+          animationTypeForReplace: "pop",
+          headerShown: true,
+          headerTitleStyle: theme.fonts.titleSmall,
+          headerLeft: () => (
+            <IconButton
+              icon="keyboard-backspace"
+              size={30}
+              style={{ top: "-10%" }}
+              iconColor={theme.colors.primary}
+              onPress={() => {
+                router.navigate("/(tabs)/view_posts");
+                setLastPage("inspect_post");
+              }}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen name="new_user" options={{title: "", animationTypeForReplace: 'pop', headerShown: false}} />
+      <Stack.Screen
+        name="search_users"
+        options={{
+          title: "",
+          animationTypeForReplace: "push",
+          headerShown: true,
+          headerTitleStyle: theme.fonts.titleSmall,
+          headerLeft: () => (
+            <IconButton
+              icon="keyboard-backspace"
+              size={30}
+              style={{ top: "-10%" }}
+              iconColor={theme.colors.primary}
+              onPress={() => {
+                router.navigate("/(tabs)/"+lastPage);
+                setLastPage("search_users");
+              }}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="profile_settings"
+        options={{
+          title: "",
+          animationTypeForReplace: "push",
+          headerShown: true,
+          headerTitleStyle: theme.fonts.titleSmall,
+          headerLeft: () => (
+            <IconButton
+              icon="keyboard-backspace"
+              size={30}
+              style={{ top: "-10%" }}
+              iconColor={theme.colors.primary}
+              onPress={() => {
+                router.navigate("/(tabs)/"+lastPage);
+                setLastPage("profile_settings");
               }}
             />
           ),
@@ -68,7 +133,7 @@ export default function TabsLayout() {
           title: "profile",
           animationTypeForReplace: "push",
           headerShown: true,
-          headerTitleStyle:theme.fonts.titleSmall,
+          headerTitleStyle: theme.fonts.titleSmall,
           headerLeft: () => (
             <IconButton
               icon="keyboard-backspace"
@@ -77,9 +142,27 @@ export default function TabsLayout() {
               iconColor={theme.colors.primary}
               onPress={() => {
                 router.replace("/(tabs)/view_posts");
-                setLastPage("profile")
+                setLastPage("profile");
               }}
             />
+          ),
+          headerRight: () => (
+            <>
+              <IconButton
+                icon="magnify"
+                onPress={() => {
+                  router.replace("/(tabs)/search_users");
+                  setLastPage("profile");
+                }}
+              />
+              <IconButton
+                icon="dots-horizontal"
+                onPress={() => {
+                  router.replace("/(tabs)/profile_settings");
+                  setLastPage("profile");
+                }}
+              />
+            </>
           ),
         }}
       />

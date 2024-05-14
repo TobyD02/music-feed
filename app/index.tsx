@@ -2,6 +2,7 @@
 import { router } from "expo-router";
 import { useEffect } from "react";
 import { supabase } from "./utils/supabase";
+import { getUserData } from "./utils/api_interface";
 
 export default function IndexPage() {
 
@@ -12,6 +13,7 @@ export default function IndexPage() {
   
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("session", session);
       if (session) {
         router.replace("/(tabs)/view_posts/");
       } else {

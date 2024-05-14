@@ -1,4 +1,4 @@
-import { View, Image, StyleSheet, ScrollView, Dimensions } from "react-native";
+import { View, Image, StyleSheet, ScrollView, Dimensions, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../utils/supabase";
 import { Stack } from "expo-router";
@@ -9,6 +9,8 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { IconButton, useTheme } from "react-native-paper";
 import { Card, Text, Avatar, Button } from "react-native-paper";
 import { useFonts } from "expo-font";
+import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ViewPosts = () => {
   const [posts, setPosts] = useState<Post[] | null>(null);
@@ -36,19 +38,22 @@ const ViewPosts = () => {
   };
 
   useEffect(() => {
-    getUserData().then(({ user, error }) => {
+    getUserData().then(({ user: userData, error }) => {
       if (error) console.log(error);
-      else {
-        setUser(user);
-        getPosts(user).then(({ data, error }) => {
+      else if (userData){
+        setUser(userData);
+        getPosts(userData).then(({ data, error }) => {
           if (error) console.log(error);
           else {
+            console.log({data})
             setPosts(data);
           }
         });
+
+        if (userData.just_created) router.navigate("/(tabs)/new_user");
       }
     });
-  }, [posts]);
+  }, []);
 
   // const insets = useSafeAreaInsets();
   const theme = useTheme();
@@ -70,20 +75,28 @@ const ViewPosts = () => {
 const PostItem = ({ post, playTrack, playing }: { post: Post; playTrack: (track: string) => void; playing: { isPlaying: boolean; name: string } }) => {
   const theme = useTheme();
 
+  console.log('loading')
+
   return (
     <View style={[styles.post, { backgroundColor: theme.colors.background, width: "100%" }]}>
-      <View style={{ flexDirection: "row", alignItems: "center", width: "100%" }}>
-        <Avatar.Image size={25} source={{ uri: post.picture_url }} style={{ marginRight: 10 }} />
-        <Text variant="bodySmall" style={{ color: theme.colors.primary }}>
-          {post.display_name}
-        </Text>
-      </View>
+      <TouchableOpacity
+        onPress={() => {
+          router.push({ pathname: `/inspect_post` });
+          AsyncStorage.setItem("inspected_post", JSON.stringify(post));
+        }}>
+        <View style={{ flexDirection: "row", alignItems: "center", width: "100%" }}>
+          <Avatar.Image size={25} source={{ uri: post.picture_url }} style={{ marginRight: 10 }} />
+          <Text variant="bodySmall" style={{ color: theme.colors.primary }}>
+            {post.display_name}
+          </Text>
+        </View>
+      </TouchableOpacity>
       <View>
-        <View style={{ width: "100%", display: "flex", alignItems: "center"}}>
-          <View style={{ width: "100%", marginTop: 5}}>
-            <Card.Cover source={{ uri: post.post_data.album_cover }} style={{ width: Dimensions.get("window").width , height: Dimensions.get("window").width}} />
+        <View style={{ width: "100%", display: "flex", alignItems: "center" }}>
+          <View style={{ width: "100%", marginTop: 5 }}>
+            <Card.Cover source={{ uri: post.post_data.album_cover }} style={{ width: Dimensions.get("window").width, height: Dimensions.get("window").width }} />
           </View>
-          <View style={{flexDirection: "row", justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
             {post.post_data.preview_url ? (
               <View>
                 {playing.isPlaying && playing.name == post.post_data.preview_url ? (
@@ -93,11 +106,11 @@ const PostItem = ({ post, playTrack, playing }: { post: Post; playTrack: (track:
                 )}
               </View>
             ) : (
-              <View style={{ ...StyleSheet.absoluteFillObject, justifyContent: "flex-end" }}>
+              <View>
                 <IconButton icon="close" size={35} />
               </View>
             )}
-            <View style={{flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: Dimensions.get("window").width /2}}>
+            <View style={{ flexDirection: "column", justifyContent: "center", alignItems: "center", width: Dimensions.get("window").width / 2 }}>
               <Text variant="titleSmall" numberOfLines={1} style={{ color: theme.colors.primary, fontSize: 15 }}>
                 {post.post_data.song_name}
               </Text>
@@ -106,9 +119,18 @@ const PostItem = ({ post, playTrack, playing }: { post: Post; playTrack: (track:
             <IconButton icon="emoticon" size={35} />
           </View>
         </View>
-        <Text variant="bodySmall" style={{marginBottom: 5, marginLeft: 5}}>This is where the caption goes</Text>
-        <Text variant="titleSmall" style={{marginLeft: 5, fontSize: 14, fontWeight: '200'}}>Add a comment...</Text>
-
+        <Text variant="bodySmall" style={{ marginBottom: 5, marginLeft: 5 }}>
+          {post.caption}
+        </Text>
+        <Text
+          onPress={() => {
+            router.push({ pathname: `/inspect_post` });
+            AsyncStorage.setItem("inspected_post", JSON.stringify(post));
+          }}
+          variant="titleSmall"
+          style={{ marginLeft: 5, fontSize: 14, fontWeight: "200" }}>
+          Add a comment...
+        </Text>
       </View>
     </View>
   );

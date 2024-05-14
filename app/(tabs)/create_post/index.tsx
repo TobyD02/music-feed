@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createPost, getUserData, getUserHasPosted } from "../../utils/api_interface";
 import { UserData } from "../../utils/interfaces";
-import { useTheme, Text, Searchbar, Button } from "react-native-paper";
+import { useTheme, Text, Searchbar, Button, TextInput } from "react-native-paper";
 
 type setSelectedType = (
   value:
@@ -30,6 +30,7 @@ const CreatePost = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [hasPosted, setHasPosted] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [caption, setCaption] = useState<string>('');
 
   const theme = useTheme();
 
@@ -71,7 +72,7 @@ const CreatePost = () => {
     if (hasPosted) return null;
 
     if (user)
-      createPost(user, selected)
+      createPost(user, selected, caption)
         .then((res) => {
           setHasPosted(true);
         })
@@ -87,7 +88,8 @@ const CreatePost = () => {
         <Text variant="labelMedium">Already posted today</Text>
       ) : (
         <>
-          <Text variant="labelMedium" style={{margin: 10}}>
+          <TextInput style={[theme.fonts.titleSmall, { width: "75%", height: 30, backgroundColor: theme.colors.background, margin: 10 }]} onChangeText={(text) => setCaption(text)} placeholder="Add a caption..." />
+          <Text variant="labelMedium" style={{ margin: 10 }}>
             Whats your song for today?
           </Text>
           <Searchbar
@@ -96,7 +98,7 @@ const CreatePost = () => {
             autoCapitalize="none"
             autoCorrect={false}
             iconColor="white"
-            inputStyle={[{ minHeight: 0, color: "black"}, theme.fonts.bodySmall]}
+            inputStyle={[{ minHeight: 0, color: "black" }, theme.fonts.bodySmall]}
             placeholderTextColor={"rgba(0,0,0,0.5)"}
             value={query}
             onChangeText={(text) => {
@@ -172,8 +174,8 @@ const styles = StyleSheet.create({
   },
   song_choice: {
     height: 50,
-    margin: 10
-  }
+    margin: 10,
+  },
 });
 
 export default CreatePost;

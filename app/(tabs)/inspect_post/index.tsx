@@ -1,13 +1,13 @@
 import { View, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Comment, Post, UserData } from "../../utils/interfaces";
 import { router } from "expo-router";
 import { Avatar, Card, IconButton, Text, useTheme, TextInput } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../utils/supabase";
 import { getUserData, postComment } from "../../utils/api_interface";
+import SoundPlayer from "react-native-sound-player";
 
 const InspectPost = ({}) => {
   const params = useLocalSearchParams();
@@ -16,6 +16,28 @@ const InspectPost = ({}) => {
   const [comments, setComments] = useState<Object[]>([]);
   const [user, setUser] = useState<UserData | null>(null);
   const theme = useTheme();
+
+  const [playing, setPlaying] = useState({
+    isPlaying: false,
+    name: "",
+  });
+
+  const playTrack = (track: string) => {
+    console.log(track);
+    if (playing.isPlaying && track == playing.name) {
+      setPlaying({
+        isPlaying: false,
+        name: "",
+      });
+      SoundPlayer.stop();
+    } else {
+      setPlaying({
+        isPlaying: true,
+        name: track,
+      });
+      SoundPlayer.playUrl(track);
+    }
+  };
 
   useEffect(() => {
     const getData = async () => {
@@ -58,7 +80,7 @@ const InspectPost = ({}) => {
     <View style={{ backgroundColor: theme.colors.background, flex: 1 }}>
       <Stack.Screen options={{ headerShown: false, title: "" }} />
 
-      {!loading && <PostItem submitComment={submitComment} comments={comments} post={postData} playTrack={() => {}} playing={{ isPlaying: false, name: "" }} />}
+      {!loading && <PostItem submitComment={submitComment} comments={comments} post={postData} playTrack={playTrack} playing={playing} />}
     </View>
   );
 };

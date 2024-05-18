@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import React, {useState, useEffect} from "react";
-import { Stack } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { useTheme, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Searchbar } from "react-native-paper";
@@ -12,20 +12,10 @@ import { PostgrestError } from "@supabase/supabase-js";
 export default function NewUser() {
   const theme = useTheme();
   const [username, setUsername] = useState<string>("")
-  const [user, setUser] = useState<UserData | null>(null)
   const [error, setError] = useState<string | null | PostgrestError>(null)
-
-  useEffect(() => {
-    const getData = async() => {
-      getUserData().then(({ user, error }) => {
-        console.log(user)
-        if (error) console.log(error);
-        else setUser(user)  
-      })
-    }
-
-    getData()
-  }, [])
+  
+  const params = useLocalSearchParams()
+  const [user, setUser] = useState<UserData | null>(params)
 
   const submitUsername = () => {
     console.log(user)

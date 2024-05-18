@@ -15,6 +15,10 @@ export const getUserData = async (): Promise<{ user: UserData | null; error: Pos
 
     console.log("fetching user");
     const { data: User, error } = await supabase.auth.getUser();
+    console.log({User})
+
+    const users = await supabase.from('users').select('*')
+    console.log({users})
   
     const user = await supabase.from("users").select("*").eq("id", User.user?.id).single();
 

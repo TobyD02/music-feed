@@ -65,8 +65,8 @@ const createSessionFromUrl = async (url: string) => {
       just_created: true,
     };
 
-    const upload_success = await supabase.from("users").upsert(user_profile);
-    if (upload_success?.error) return upload_success.error;
+    const upsertUser = await supabase.from("users").upsert(user_profile);
+    if (upsertUser?.error) console.log(upsertUser?.error);
   }
 
   return data.session;
@@ -78,6 +78,7 @@ const performOAuth = async () => {
     options: {
       redirectTo,
       skipBrowserRedirect: true,
+      scopes: 'user-top-read'
     },
   });
   if (error) throw error;
@@ -105,7 +106,7 @@ export default function Auth() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Stack.Screen options={{ headerShown: false, title: "Login" }} />
       <Text variant="titleLarge" style={{ margin: 10, color: theme.colors.primary }}>
-        discjam
+        cassette
       </Text>
       <Button style={{ width: "40%", borderWidth: 3 }} mode="outlined" labelStyle={theme.fonts.titleSmall} textColor="white" onPress={performOAuth}>
         SIGN IN

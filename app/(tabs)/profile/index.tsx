@@ -4,22 +4,67 @@ import { supabase } from "../../utils/supabase";
 import { useEffect, useState } from "react";
 import { getUserData } from "../../utils/api_interface";
 import { UserData, Post } from "../../utils/interfaces";
-import { Avatar, Card, Text, useTheme } from "react-native-paper";
+import { Avatar, Card, IconButton, Text, useTheme } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import SoundPlayer from "react-native-sound-player";
 
 export default function Profile() {
   const [user, setUser] = useState<UserData | null>(null);
-  const [posts, setPosts] = useState<Post[] | null>(null);
+  const [topTracks, setTopTracks] = useState<any[] | null>(null);
+  const [topArtists, setTopArtists] = useState<any[] | null>(null);
+  const [playing, setPlaying] = useState({
+    isPlaying: false,
+    name: "",
+  });
+
+  const playTrack = (track: string) => {
+    console.log(track);
+    if (playing.isPlaying && track == playing.name) {
+      setPlaying({
+        isPlaying: false,
+        name: "",
+      });
+      SoundPlayer.stop();
+    } else {
+      setPlaying({
+        isPlaying: true,
+        name: track,
+      });
+      SoundPlayer.playUrl(track);
+    }
+  };
+
   useEffect(() => {
     const getData = async () => {
       const { user: userData, error: userError } = await getUserData();
+      
       if (userData) setUser(userData);
       if (userData) {
-        console.log("fetching");
-        const { data, error } = await supabase.from("daily_posts").select("*").eq("user_id", userData.id);
-        console.log("finished fetching posts");
-        console.log(data);
-        if (data) setPosts(data);
-        else console.log(error);
+        const token = await AsyncStorage.getItem("provider_token");
+        // get most listened to artists and songs
+
+        // Get top artists
+        fetch("https://api.spotify.com/v1/me/top/artists?limit=3", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            setTopArtists(data.items);
+          })
+          .catch((error) => console.error(error));
+        fetch("https://api.spotify.com/v1/me/top/tracks?limit=3", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            setTopTracks(data.items);
+            console.log(Object.keys(data.items[0]));
+          })
+          .catch((error) => console.error(error));
       } else {
         console.log("error fetching posts");
       }
@@ -38,28 +83,63 @@ export default function Profile() {
   const theme = useTheme();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={{alignItems: 'center', marginBottom: 20}}>
+      <View style={{ alignItems: "center", marginBottom: 20 }}>
         <Image source={{ uri: user?.picture_url }} style={{ width: 150, height: 150, borderRadius: 75, margin: 20 }} />
         <Text variant="titleSmall" style={{ fontSize: 15 }}>
           {user?.display_name}
         </Text>
       </View>
-      <View style={{justifyContent: 'space-between', flex: 1}}>
-        <View style={{justifyContent: 'flex-start'}}>
+      <View style={{ justifyContent: "space-between", flex: 1, marginTop: 10 }}>
+        <View style={{ justifyContent: "flex-start" }}>
           <Text variant="titleSmall" style={{}}>
             Most listened to artists
           </Text>
+          <View style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+            {topArtists?.map((artist: any) => (
+              <View style={{ margin: 10, alignItems: "center" }}>
+                <Image source={{ uri: artist.images[0].url }} width={100} height={100} style={{ borderRadius: 100 / 2 }} />
+                <Text variant="bodySmall" style={{ marginTop: 5 }}>
+                  {artist.name}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
-        <View>
-          <Text variant='titleSmall'>Pinned Tracks</Text>
+        <View style={{ marginTop: 20 }}>
+          <Text variant="titleSmall">Pinned Tracks </Text>
+          <View style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
+            {topTracks?.map((track: any) => (
+              <View style={{ margin: 0, alignItems: "center" }}>
+                <Card.Cover source={{ uri: track.album.images[0].url }} style={{ width: 110, height: 150 }} />
+                <Text variant="titleSmall" style={{ marginTop: 5, fontSize: 12 }}>
+                  {track.name}
+                </Text>
+                <Text variant="bodySmall">{track.artists[0].name}</Text>
+                {track.preview_url ? (
+                  <View>
+                    {playing.isPlaying && playing.name == track.preview_url ? (
+                      <IconButton icon="pause-circle" size={35} onPress={() => playTrack(track.preview_url)} />
+                    ) : (
+                      <IconButton icon="play-circle" size={35} onPress={() => playTrack(track.preview_url)} />
+                    )}
+                  </View>
+                ) : (
+                  <View>
+                    <IconButton icon="close" size={35} />
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
         </View>
-        <View style={{alignItems: 'center'}}>
-          <Text style={{fontSize: 15}} variant='titleSmall'>discjam.io/{user?.display_name}</Text>
+        <View style={{ alignItems: "center", flex: 1, justifyContent: "flex-end" }}>
+          <Text style={{ fontSize: 15 }} variant="titleSmall">
+            cassette.lol/{user?.display_name}
+          </Text>
         </View>
       </View>
-
     </SafeAreaView>
   );
 }

@@ -19,9 +19,9 @@ const ViewPosts = () => {
     name: "",
   });
   const [user, setUser] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const playTrack = (track: string) => {
-    console.log(track);
     if (playing.isPlaying && track == playing.name) {
       setPlaying({
         isPlaying: false,
@@ -38,22 +38,31 @@ const ViewPosts = () => {
   };
 
   useEffect(() => {
-    getUserData().then(({ user: userData, error }) => {
-      if (error) console.log(error);
-      else if (userData){
-        setUser(userData);
-        getPosts(userData).then(({ data, error }) => {
-          if (error) console.log(error);
-          else {
-            console.log({data})
-            setPosts(data);
+    supabase.auth.getUser().then(({ data }) => {
+      supabase
+        .from("users")
+        .select("*")
+        .eq("id", data?.user?.id)
+        .single()
+        .then(({ data: userData, error }) => {
+          if (userData === null) {
+            router.navigate("(auth)/login");
+          } else if (userData.length == 0) {
+            router.navigate("(auth)/login");
+          } else if (userData) {
+            setLoading(false);
+            setUser(userData);
+            if (userData?.just_created) router.navigate({ pathname: "(tabs)/new_user", params: userData });
+            getPosts(userData).then(({ data: postData, error }) => {
+              if (error) console.log(error);
+              else {
+                setPosts(postData);
+              }
+            });
           }
         });
-
-        if (userData.just_created) router.navigate("/(tabs)/new_user");
-      }
     });
-  }, []);
+  }, [loading]);
 
   // const insets = useSafeAreaInsets();
   const theme = useTheme();
@@ -61,12 +70,18 @@ const ViewPosts = () => {
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <Stack.Screen options={{ headerShown: false }} />
-      {posts && posts.length > 0 ? (
-        <ScrollView contentContainerStyle={styles.posts_container}>{posts && posts?.map((post: Post) => <PostItem key={post.post_id} post={post} playTrack={playTrack} playing={playing} />)}</ScrollView>
+      {loading ? (
+        <></>
       ) : (
-        <View style={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1 }}>
-          <Text variant="labelSmall">No Posts Today...</Text>
-        </View>
+        <>
+          {posts && posts.length > 0 ? (
+            <ScrollView contentContainerStyle={styles.posts_container}>{posts && posts?.map((post: Post) => <PostItem key={post.post_id} post={post} playTrack={playTrack} playing={playing} />)}</ScrollView>
+          ) : (
+            <View style={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1 }}>
+              <Text variant="labelSmall">No Posts Today...</Text>
+            </View>
+          )}
+        </>
       )}
     </View>
   );
@@ -74,8 +89,6 @@ const ViewPosts = () => {
 
 const PostItem = ({ post, playTrack, playing }: { post: Post; playTrack: (track: string) => void; playing: { isPlaying: boolean; name: string } }) => {
   const theme = useTheme();
-
-  console.log('loading')
 
   return (
     <View style={[styles.post, { backgroundColor: theme.colors.background, width: "100%" }]}>

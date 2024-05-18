@@ -13,7 +13,6 @@ export default function IndexPage() {
   
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("session", session);
       if (session) {
         router.replace("/(tabs)/view_posts/");
       } else {

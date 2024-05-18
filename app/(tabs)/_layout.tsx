@@ -14,7 +14,7 @@ export default function TabsLayout() {
         name="view_posts"
         options={{
           headerShown: true,
-          title: "discjam",
+          title: "cassette",
           animationTypeForReplace: lastPage == "create_post" ? "push" : "pop",
           headerLeft: () => (
             <IconButton
@@ -84,7 +84,7 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Stack.Screen name="new_user" options={{title: "", animationTypeForReplace: 'pop', headerShown: false}} />
+      <Stack.Screen name="new_user" options={{ title: "", animationTypeForReplace: "pop", headerShown: false }} />
       <Stack.Screen
         name="search_users"
         options={{
@@ -99,7 +99,7 @@ export default function TabsLayout() {
               style={{ top: "-10%" }}
               iconColor={theme.colors.primary}
               onPress={() => {
-                router.navigate("/(tabs)/"+lastPage);
+                router.navigate("/(tabs)/" + lastPage);
                 setLastPage("search_users");
               }}
             />
@@ -120,7 +120,7 @@ export default function TabsLayout() {
               style={{ top: "-10%" }}
               iconColor={theme.colors.primary}
               onPress={() => {
-                router.navigate("/(tabs)/"+lastPage);
+                router.navigate("/(tabs)/" + lastPage);
                 setLastPage("profile_settings");
               }}
             />

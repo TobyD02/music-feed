@@ -9,6 +9,7 @@ dist/
 web-build/
 .env
 ios/
+android
 
 # Native
 *.orig.*

@@ -29,6 +29,8 @@ console.log({ redirectTo });
 const createSessionFromUrl = async (url: string) => {
   const { params, errorCode } = QueryParams.getQueryParams(url);
 
+  console.log(params)
+
   if (errorCode) throw new Error(errorCode);
   const { access_token, refresh_token, provider_token } = params;
 
@@ -59,7 +61,7 @@ const createSessionFromUrl = async (url: string) => {
       id: data.session?.user.id,
       display_name: spotify_data?.display_name,
       email: spotify_data?.email,
-      picture_url: spotify_data?.images.length > 0 ? spotify_data?.images[1].url : "", // Second image is higher resolution
+      picture_url: spotify_data?.images?.length > 0 ? spotify_data?.images[1].url : "", // Second image is higher resolution
       followers: [],
       following: [],
       just_created: true,
@@ -77,13 +79,18 @@ const performOAuth = async () => {
     provider: "spotify",
     options: {
       redirectTo,
-      skipBrowserRedirect: true,
-      scopes: 'user-top-read'
+      skipBrowserRedirect: false,
+      scopes: 'user-top-read',
     },
   });
+
+  console.log("data: ", data)
+
   if (error) throw error;
 
-  const res = await WebBrowser.openAuthSessionAsync(data?.url ?? "", redirectTo);
+  // Open without cookies, prevents auto sign in
+  const res = await WebBrowser.openAuthSessionAsync(data?.url ?? "", redirectTo, {preferEphemeralSession: true}); 
+  // const res = await WebBrowser.openAuthSessionAsync(data?.url ?? "", redirectTo); 
 
   if (res.type === "success") {
     const { url } = res;

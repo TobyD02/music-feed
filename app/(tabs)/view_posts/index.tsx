@@ -132,7 +132,7 @@ const PostItem = ({ post, playTrack, playing }: { post: Post; playTrack: (track:
             <IconButton icon="emoticon" size={35} />
           </View>
         </View>
-        <Text variant="bodySmall" style={{ marginBottom: 5, marginLeft: 5 }}>
+        <Text variant="titleSmall" style={{ marginBottom: 5, marginLeft: 5 }}>
           {post.caption}
         </Text>
         <Text
@@ -140,7 +140,7 @@ const PostItem = ({ post, playTrack, playing }: { post: Post; playTrack: (track:
             router.push({ pathname: `/inspect_post` });
             AsyncStorage.setItem("inspected_post", JSON.stringify(post));
           }}
-          variant="titleSmall"
+          variant="bodySmall"
           style={{ marginLeft: 5, fontSize: 14, fontWeight: "200" }}>
           Add a comment...
         </Text>

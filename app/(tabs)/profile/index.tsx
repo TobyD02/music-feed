@@ -111,12 +111,12 @@ export default function Profile() {
           <Text variant="titleSmall">Pinned Tracks </Text>
           <View style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
             {topTracks?.map((track: any) => (
-              <View style={{ margin: 0, alignItems: "center" }}>
+              <View style={{ margin: 0, alignItems: "center"}}>
                 <Card.Cover source={{ uri: track.album.images[0].url }} style={{ width: 110, height: 150 }} />
-                <Text variant="titleSmall" style={{ marginTop: 5, fontSize: 12 }}>
+                <Text variant="titleSmall" style={{ marginTop: 5, fontSize: 12, width: 110, textAlign: "center" }}>
                   {track.name}
                 </Text>
-                <Text variant="bodySmall">{track.artists[0].name}</Text>
+                <Text style={{width: 110, textAlign: "center"}} variant="bodySmall">{track.artists[0].name}</Text>
                 {track.preview_url ? (
                   <View>
                     {playing.isPlaying && playing.name == track.preview_url ? (

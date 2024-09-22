@@ -1,6 +1,6 @@
 import { View, StyleSheet } from "react-native";
 import React, { useState, useEffect } from "react";
-import { getUserData, searchUsers, followUser } from "../../utils/api_interface";
+import { getUserData, searchUsers, followUser, unfollowUser } from "../../utils/api_interface";
 import { UserData } from "../../utils/interfaces";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Searchbar, useTheme, Avatar, Text, IconButton, Card } from "react-native-paper";
@@ -22,6 +22,10 @@ const SearchUsers = () => {
   const follow = async (userToFollow: UserData) => {
     if (user) await followUser(user, userToFollow);
   };
+
+  const unfollow = async(userToUnfollow: UserData) => {
+    if (user) await unfollowUser(user, userToUnfollow);
+  }
 
   const insets = useSafeAreaInsets();
   const theme = useTheme();
@@ -58,6 +62,7 @@ const SearchUsers = () => {
             key={result.id}
             user={result}
             follow={follow}
+            unfollow={unfollow}
             followList={user?.following}
           />
         ))}
@@ -65,7 +70,7 @@ const SearchUsers = () => {
   );
 };
 
-const UserBar = ({ user, followList, follow }: { user: any; followList: string[] | undefined; follow: (userToFollow: UserData) => void }) => {
+const UserBar = ({ user, followList, follow, unfollow }: { user: any; followList: string[] | undefined; follow: (userToFollow: UserData) => void, unfollow: (userToUnfollow: UserData) => void }) => {
   const [followed, setFollowed] = useState<boolean | undefined>(followList?.includes(user.id));
 
   console.log(followed)
@@ -81,7 +86,10 @@ const UserBar = ({ user, followList, follow }: { user: any; followList: string[]
         </Card.Content>
         <Card.Content>
           {followed ? (
-            <IconButton icon="account-check-outline" size={20} />
+            <IconButton icon="account-check-outline" size={20} onPress={() => {
+              unfollow(user)
+              setFollowed(false)
+            }} />
           ) : (
             <IconButton
               icon="account-plus-outline"

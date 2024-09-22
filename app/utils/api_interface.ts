@@ -75,6 +75,24 @@ export const followUser = async (user: UserData, follow: UserData) => {
   else return null;
 };
 
+export const unfollowUser = async (user: UserData, unfollow: UserData) => {
+  await clearUserData(); // clear stored user data
+
+
+  console.log(user.following)
+
+  // Remove user from following list
+  const { data: followingData, error: followingError } = await supabase
+    .from("users")
+    .update({ following: user.following.filter((id) => id !== unfollow.id.toString()) }) // Remove unfollow.id
+    .eq("id", user.id)
+    .single();
+
+  // if (followingError || followersError) return { error: followingError && followersError };
+  // else return null
+  return null
+};
+
 // TODO Add second user to test displaying posts from following list
 export const getPosts = async (user: UserData) => {
   const { data: userData, error: userError } = await supabase
@@ -83,7 +101,11 @@ export const getPosts = async (user: UserData) => {
     .eq("user_id", user.id)
     .eq("date_posted", new Date().toISOString().slice(0, 10));
 
-  const { data: followingData, error: followingError } = await supabase.from("daily_posts").select("*").in("user_id", user.following).eq("date_posted", new Date().toISOString().slice(0, 10));
+  const { data: followingData, error: followingError } = await supabase
+    .from("daily_posts")
+    .select("*")
+    .in("user_id", user.following)
+    .eq("date_posted", new Date().toISOString().slice(0, 10));
 
   // const { data: followingData, error: followingError } = await supabase.from("daily_posts").select("*")
 
@@ -97,8 +119,8 @@ export const getPosts = async (user: UserData) => {
 
 // TOOD: Prevent user from searching for themselves
 export const searchUsers = async (query: string, user: UserData): Promise<{ data: any; error: PostgrestError | null }> => {
-  // const { data, error } = await supabase.from("users").select().textSearch("display_name", `${query.toLowerCase()}:*`).limit(10).neq('id', user.id);
-  const { data, error } = await supabase.from("users").select("*");
+  const { data, error } = await supabase.from("users").select().textSearch("display_name", `${query.toLowerCase()}:*`).limit(10).neq("id", user.id);
+  // const { data, error } = await supabase.from("users").select("*");
 
   return { data, error };
 };
@@ -139,7 +161,6 @@ export const postComment = async (comment: Comment) => {
 
 export const deleteComment = async (id: number) => {
   const { data, error } = await supabase.from("comments").delete().eq("id", id);
-
 };
 
 export const clearUserData = async (): Promise<{ success: boolean }> => {

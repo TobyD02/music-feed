@@ -33,6 +33,9 @@ const CreatePost = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [caption, setCaption] = useState<string>("");
 
+  const [editingCaption, setEditingCaption] = useState<boolean>(false);
+  const [editingSearch, setEditingSearch] = useState<boolean>(false);
+
   const theme = useTheme();
 
   useEffect(() => {
@@ -40,7 +43,7 @@ const CreatePost = () => {
       const { user, error } = await getUserData();
       if (error) console.log(error);
       else {
-        console.log("user: " + JSON.stringify(user));
+        // console.log("user: " + JSON.stringify(user));
         setUser(user);
         const has_posted = await getUserHasPosted(user.id);
         //TODO: disable continous posting
@@ -98,13 +101,14 @@ const CreatePost = () => {
                   Whats your song for today?
                 </Text>
                 <Searchbar
-                  placeholder=""
+                  placeholder="Search for a song..."
                   style={{ width: "75%", height: 30, backgroundColor: "white", margin: 10 }}
                   autoCapitalize="none"
                   autoCorrect={false}
                   iconColor="white"
                   inputStyle={[{ minHeight: 0, color: "black" }, theme.fonts.bodySmall]}
                   placeholderTextColor={"rgba(0,0,0,0.5)"}
+                  selectionColor={"rgba(0, 0, 0, 0.5"}
                   value={query}
                   onChangeText={(text) => {
                     setQuery(text);
@@ -113,37 +117,54 @@ const CreatePost = () => {
                     getSearchData();
                   }}></Searchbar>
                 <View style={styles.search_results}>
-                  {searchResults &&
-                    searchResults.tracks?.items?.map((item: any) => (
-                      <SearchItem
-                        key={item.id}
-                        song_name={item.name}
-                        album_cover={item.album.images[0].url}
-                        song_artist={item.artists[0].name}
-                        preview_url={item.preview_url}
-                        setItem={setSelected as setSelectedType}
-                      />
-                    ))}
+                  {searchResults
+                    ? editingCaption
+                      ? searchResults.tracks.items
+                          .slice(0, editingCaption ? searchResults.tracks.items.length - 1 : searchResults.tracks.items.length)
+                          .map((item: any) => (
+                            <SearchItem
+                              key={item.id}
+                              song_name={item.name}
+                              album_cover={item.album.images[0].url}
+                              song_artist={item.artists[0].name}
+                              preview_url={item.preview_url}
+                              setItem={setSelected as setSelectedType}
+                            />
+                          ))
+                      : searchResults.tracks?.items?.map((item: any) => (
+                          <SearchItem
+                            key={item.id}
+                            song_name={item.name}
+                            album_cover={item.album.images[0].url}
+                            song_artist={item.artists[0].name}
+                            preview_url={item.preview_url}
+                            setItem={setSelected as setSelectedType}
+                          />
+                        ))
+                    : null}
                 </View>
               </View>
               <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : null}
+                behavior={editingCaption ? (Platform.OS === "ios" ? "padding" : null) : null}
+                keyboardVerticalOffset={50}
                 style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
                 <TextInput
-                  style={[theme.fonts.titleSmall, { width: "75%", height: 30, backgroundColor: theme.colors.background, margin: 10 }]}
+                  style={[theme.fonts.titleSmall, { width: Dimensions.get("screen").width * 0.9, height: 30, backgroundColor: theme.colors.background, margin: 10 }]}
                   onChangeText={(text) => setCaption(text)}
                   placeholder="Add a caption..."
+                  onFocus={() => setEditingCaption(true)}
+                  onBlur={() => setEditingCaption(false)}
                 />
-                <View style={{ width: 150, height: 50, flexDirection: "row", justifyContent: "center", display: "flex", marginTop: 25 }}>
+                <View style={{ width: Dimensions.get("screen").width * 0.9, minHeight: 50, flexDirection: "row", justifyContent: "flex-start", alignItems: 'center', display: "flex", marginTop: 25 }}>
                   <Card.Cover source={{ uri: selected?.album_cover }} resizeMode="center" style={{ width: 50, height: 50, marginLeft: 10 }} />
-                  <View style={{ justifyContent: "center", marginLeft: 10 }}>
+                  <View style={{ justifyContent: "center", marginLeft: 10, width: Dimensions.get("screen").width * 0.8 / 4}}>
                     <Text variant="titleSmall">{selected?.song_artist}</Text>
                     <Text>{selected?.song_name}</Text>
                   </View>
+                  <View style={{ justifyContent: 'center', marginLeft: 20, width: Dimensions.get("screen").width * 0.8 / 3 * 2}}>
+                    <Text>{caption}</Text>
+                  </View>
                 </View>
-                <Text variant="bodySmall" style={{ flexWrap: "wrap", width: 150, marginTop: 10 }}>
-                  {caption}
-                </Text>
               </KeyboardAvoidingView>
             </View>
             <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>

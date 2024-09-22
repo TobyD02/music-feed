@@ -198,7 +198,7 @@ const PostItem = ({
                   }}>
                   <Avatar.Image size={30} source={{ uri: comment.user_picture }} style={{ marginRight: 10, marginTop: 5 }} />
                   <Text style={{lineHeight: 40}}variant="titleSmall">{comment.display_name} </Text>
-                  <Text style={{ flexWrap: "wrap", textAlign: 'auto', maxWidth: '65%', lineHeight: 20, marginTop: 10}} variant="bodyMedium">
+                  <Text style={{ flexWrap: "wrap", textAlign: 'auto', maxWidth: '65%', lineHeight: 20, marginTop: 9}} variant="bodyMedium">
                     {comment.content}
                   </Text>
                 </View>
